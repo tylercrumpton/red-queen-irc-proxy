@@ -1,0 +1,13 @@
+{
+  "name": "node-irc-bot",
+  "version": "0.0.1",
+  "dependencies": {
+    "irc" : "*",
+    "restify" : "*",
+    "body-parser" : "*",
+    "redis" : "*",
+    "fs": "*",
+    "node-static": "*",
+    "minimist": "*"
+  }
+}

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Red Queen IRC REST Proxy</title>
+        <style>
+            h1, p, li {
+                font-family: Helvetica, Arial, sans-serif;
+                color: white;
+            }
+            td.code {
+                font-family: monospace;
+                white-space: nowrap;
+                background-color: white;
+                color: black;
+            }
+            span.red {
+                color: red;
+            }
+        </style>
+    </head>
+    <body bgcolor="#0A0A0A">
+        <h1>I can give you the code, but first you must do something for <span class="red">me.</span></h1>
+        <p>
+            In order to use my IRC REST proxy interface, you must first acquire an API key from the server admin.
+        </p>
+        <p>
+            After acquring a key, simply make an HTTP GET request as follows:
+            <table>
+             <tr>
+              <td  class="code">curl --data '{"message":"My message", "channel":"##rqtest", "isaction":false, "key":"13371234"}' http://www.myredqueenurl.com/relay --header "Content-Type:application/json"</td>
+             </tr>
+            </table>
+        </p>
+	<h1>Features</h1>
+        <p>
+          <ul>
+            <li>Help page with usage information</li>
+            <li>Allows both messages and action to be sent via REST API 
+            <li>Allows HTTPS for secure API key transmission</li>
+            <li>Can use ##rqtest channel for testing with a sample key</li>
+            <li>User/application authentication via API keys</li>
+          </ul>
+        </p>
+        <h1>ToDo</h1>
+        <p>
+          <ul>
+            <li>Modular parts for the API vs IRC client to allow for reloading of API code without disconnecting from IRC</li>
+            <li>Per-channel API keys</li>
+            <li>Require HTTPS</li>
+            <li>Ability to support custom colors</li>
+            <li>Set up easy management and revocation of API keys</li>
+            <li>Allow users to register a command with RedQueen that hits a URL when triggered (in both IRC and API)</li>
+          </ul>
+        </p>
+    </body>
+</html>
