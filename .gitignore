@@ -1,0 +1,10 @@
+# Ignore any SSL testing keys
+server.crt
+server.key
+
+# Ignore the node_modules directory
+node_modules
+
+# Ignore bot config files
+config*.js
+
