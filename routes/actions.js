@@ -65,8 +65,8 @@ exports.postMessage = function(req, res, next) {
     if (username == null && data.channel != "##rqtest") {
       res.send("Error: Invalid API key.");
     }
-    else if (!isChannel(data.channel)) {
-      res.send("Error: '" + data.channel + "' is not a valid channel.");
+    else if (!isValidChannel(data.channel)) {
+      res.send("Error: '" + data.channel + "' is not a channel in Red Queen's config.");
     }
     else {
       console.log("rq:irc:msg:key:"+ apiKey + " belongs to " + username);
@@ -137,8 +137,8 @@ exports.registerCommand = function(req, res, next) {
     if (username == null && data.channel != "##rqtest") {
       res.send("Error: Invalid API key.");
     }
-    else if (!isChannel(data.channel)) {
-      res.send("Error: '" + data.channel + "' is not a valid channel.");
+    else if (!isValidChannel(data.channel)) {
+      res.send("Error: '" + data.channel + "' is not a channel in Red Queen's config.");
     }
     else {
       console.log("Key "+ apiKey + " belongs to " + username);
@@ -148,6 +148,7 @@ exports.registerCommand = function(req, res, next) {
   });
 }
 
-function isChannel(name) {
-    return (name.indexOf('#') == 0);
+function isValidChannel(name) {
+    return ( name.indexOf('#') == 0 &&              // Starts with an octothorpe
+             config.channels.indexOf(name) > -1 );  // Is a channel that RQ is set to be in
 }
