@@ -142,8 +142,14 @@ exports.registerCommand = function(req, res, next) {
     }
     else {
       console.log("Key "+ apiKey + " belongs to " + username);
-      console.log('Registering command: ' + JSON.stringify(data));
-      // TODO register command in redis
+      var pattern = analyzePattern(data.command)
+      if (pattern != null) {
+        console.log('Registering command: ' + JSON.stringify(pattern.input));
+        // TODO register command in redis
+      }
+      else {
+        res.send("Error: Bad command pattern.");
+      }
     }
   });
 }
@@ -151,4 +157,9 @@ exports.registerCommand = function(req, res, next) {
 function isValidChannel(name) {
     return ( name.indexOf('#') == 0 &&              // Starts with an octothorpe
              config.channels.indexOf(name) > -1 );  // Is a channel that RQ is set to be in
+}
+
+function analyzePattern(pattern) {
+  var re = /^(!)?(\w+)( \[\w+\]| \w+)*$/;
+  return pattern.match(re);
 }
