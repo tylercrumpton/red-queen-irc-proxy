@@ -144,8 +144,13 @@ exports.registerCommand = function(req, res, next) {
       console.log("Key "+ apiKey + " belongs to " + username);
       var pattern = analyzePattern(data.command)
       if (pattern != null) {
-        console.log('Registering command: ' + JSON.stringify(pattern.input));
-        // TODO register command in redis
+        console.log('Registering command: ' + JSON.stringify(pattern));
+        r.incr('nextid', function(err, id) {
+          r.set('rq:irc:command:filter:'+id, pattern, function(){
+            var response = {"id":id, "pattern":pattern};
+            res.send(response);
+          });
+        });
       }
       else {
         res.send("Error: Bad command pattern.");
@@ -160,6 +165,24 @@ function isValidChannel(name) {
 }
 
 function analyzePattern(pattern) {
-  var re = /^(!)?(\w+)( \[\w+\]| \w+)*$/;
-  return pattern.match(re);
+  // Convert to lowercase:
+  var newpattern = pattern.toLowerCase();
+  // Strip this first '!' if there is one
+  if (newpattern.charAt(0) === '!')  {
+    newpattern = newpattern.substr(1);
+  }
+  // Split into words:
+  var arr = newpattern.split(' ');
+  // Remove empty items:
+  arr = arr.filter(Boolean);
+  // Make sure items are valid:
+  var validPattern = /^(\w*|\[\w*\])$/
+  var allValid = arr.every(function (item) {
+    return validPattern.test(item);
+  });
+  if (allValid) {
+    return arr;
+  } else {
+    return null;
+  }
 }
