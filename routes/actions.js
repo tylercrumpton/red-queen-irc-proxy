@@ -1,7 +1,7 @@
 var irc = require('irc');
 var config = module.parent.config
 var redis = require('redis');
-
+var restify = require('restify');
 var r = redis.createClient();
 
 console.log("Connecting to server: " + config.connection.host);
@@ -39,34 +39,30 @@ exports.postMessage = function(req, res, next) {
   var apiKey = data.key;
  
   if (data == null) {
-    res.send("Error: No POST body found.");
-    return;
+    return next(new restify.MissingParameterError("No POST body found."));
   }
 
   if (data == {}) {
-    res.send("Error: Parsed POST body was empty. (Hint: You need to use double-quotes in the JSON)");
-    return;
+    return next(new restify.MissingParameterError("Parsed POST body was empty. (Hint: You need to use double-quotes in the JSON)"));
   }
  
   if (data.channel == null) {
     data.channel = "#makerslocal";
   }
   if (apiKey == null) {
-    res.send("Error: No API key provided.");
-    return;
+    return next(new restify.MissingParameterError("No API key provided."));
   }
   if (data.message == null) {
-    res.send("Error: No message provided.");
-    return;
+    return next(new restify.MissingParameterError("No message provided."));
   }
 
   r.get('rq:irc:msg:key:'+apiKey, function(err, username) {    
     console.log('Looking up rq:irc:msg:key:'+apiKey);
     if (username == null && data.channel != "##rqtest") {
-      res.send("Error: Invalid API key.");
+      return next(new restify.NotAuthorizedError("Invalid API key."));
     }
     else if (!isValidChannel(data.channel)) {
-      res.send("Error: '" + data.channel + "' is not a channel in Red Queen's config.");
+      return next(new restify.InvalidArgumentError("'" + data.channel + "' is not a channel in Red Queen's config."));
     }
     else {
       console.log("rq:irc:msg:key:"+ apiKey + " belongs to " + username);
@@ -88,7 +84,7 @@ exports.listKeys = function(req, res, next) {
   var apiKey = req.header('API-Key');
   r.get('rq:irc:admin:key:'+apiKey, function(err, adminName) {    
     if (adminName == null) {
-      res.send("Error: Invalid admin key.");
+      return next(new restify.NotAuthorizedError("Invalid admin key."));
     }
     else {
       console.log("Listing keys for admin user '"+adminName+"'");
@@ -124,21 +120,19 @@ exports.registerCommand = function(req, res, next) {
     data.channel = "#makerslocal";
   }
   if (apiKey == null) {
-    res.send("Error: No API key provided.");
-    return;
+    return next(new restify.MissingParameterError("No API key provided."));
   }
   if (data.command == null) {
-    res.send("Error: No command filter provided.");
-    return;
+    return next(new restify.MissingParameterError("No command filter provided."));
   }
 
   r.get('rq:irc:commands:key:'+apiKey, function(err, username) {    
     console.log('Looking up rq:irc:commands:key:'+apiKey);
     if (username == null && data.channel != "##rqtest") {
-      res.send("Error: Invalid API key.");
+      return next(new restify.NotAuthorizedError("Invalid API key."));
     }
     else if (!isValidChannel(data.channel)) {
-      res.send("Error: '" + data.channel + "' is not a channel in Red Queen's config.");
+      return next(new restify.InvalidArgumentError("'" + data.channel + "' is not a channel in Red Queen's config."));
     }
     else {
       console.log("Key "+ apiKey + " belongs to " + username);
@@ -153,7 +147,7 @@ exports.registerCommand = function(req, res, next) {
         });
       }
       else {
-        res.send("Error: Bad command pattern.");
+        return next(new restify.InvalidArgumentError("Bad command pattern."));
       }
     }
   });
