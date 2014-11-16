@@ -4,6 +4,8 @@ var redis = require('redis');
 var restify = require('restify');
 var r = redis.createClient();
 
+var KeyTypeEnum = Object.freeze({MESSAGE:"msg",COMMAND:"cmd",ADMIN:"adm"});
+
 console.log("Connecting to server: " + config.connection.host);
 
 var client = new irc.Client(config.connection.host, config.bot.nick, {
@@ -55,9 +57,8 @@ exports.postMessage = function(req, res, next) {
   if (data.message == null) {
     return next(new restify.MissingParameterError("No message provided."));
   }
-
-  r.get('rq:irc:msg:key:'+apiKey, function(err, username) {    
-    console.log('Looking up rq:irc:msg:key:'+apiKey);
+  
+  checkApiKey(KeyTypeEnum.MESSAGE, apiKey, function(err, username) {     
     if (username == null && data.channel != "##rqtest") {
       return next(new restify.NotAuthorizedError("Invalid API key."));
     }
@@ -82,7 +83,7 @@ exports.postMessage = function(req, res, next) {
 exports.listKeys = function(req, res, next) {
   var data = req.body;
   var apiKey = req.header('API-Key');
-  r.get('rq:irc:admin:key:'+apiKey, function(err, adminName) {    
+  checkApiKey(KeyTypeEnum.ADMIN, apiKey, function(err, adminName) {   
     if (adminName == null) {
       return next(new restify.NotAuthorizedError("Invalid admin key."));
     }
@@ -126,8 +127,7 @@ exports.registerCommand = function(req, res, next) {
     return next(new restify.MissingParameterError("No command filter provided."));
   }
 
-  r.get('rq:irc:commands:key:'+apiKey, function(err, username) {    
-    console.log('Looking up rq:irc:commands:key:'+apiKey);
+  checkApiKey(KeyTypeEnum.COMMAND, apiKey, function(err, username) {  
     if (username == null && data.channel != "##rqtest") {
       return next(new restify.NotAuthorizedError("Invalid API key."));
     }
@@ -178,5 +178,21 @@ function analyzePattern(pattern) {
     return arr;
   } else {
     return null;
+  }
+}
+
+function checkApiKey(keyType, key, callback) {
+  if (keyType == KeyTypeEnum.MESSAGE) {
+    console.info("Looking up MESSAGE api-key: " + key);
+    r.get('rq:irc:msg:key:' + key, callback); 
+  } else if (keyType == KeyTypeEnum.COMMAND) {
+    console.info("Looking up COMMAND api-key: " + key);
+    r.get('rq:irc:commands:key:' + key, callback);
+  } else if (keyType == KeyTypeEnum.ADMIN) {
+    console.info("Looking up ADMIN api-key: " + key);
+    r.get('rq:irc:admin:key:' + key, callback);
+  } else {
+    console.error("Invalid keyType");
+    callback("Invalid API key type", null);
   }
 }
