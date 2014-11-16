@@ -136,12 +136,13 @@ exports.registerCommand = function(req, res, next) {
     }
     else {
       console.log("Key "+ apiKey + " belongs to " + username);
-      var pattern = analyzePattern(data.command)
+      var pattern = analyzePattern(data.command);
       if (pattern != null) {
         console.log('Registering command: ' + JSON.stringify(pattern));
         r.incr('nextid', function(err, id) {
-          r.set('rq:irc:command:filter:'+id, pattern, function(){
-            var response = {"id":id, "pattern":pattern};
+          var commandObject = {"owner":username, "command":pattern};
+          r.set('rq:irc:command:filter:'+id, JSON.stringify(commandObject), function(){
+            var response = {"id":id, "owner":username, "pattern":pattern};
             res.send(response);
           });
         });
