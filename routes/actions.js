@@ -16,6 +16,28 @@ client.addListener('message', function (nick, to, text, message) {
   //console.log(nick + ' => ' + to + ': ' + text);
   if (text == "!help" || text == "!rq") {
     client.say(to, irc.colors.wrap('light_red','Just one byte, one scratch from these creatures is sufficient. And then, you become one of them. (For more info, check http://restirc.tylercrumpton.com/docs/)'));
+  } else if (text.charAt(0) === '!') { 
+    // Strip the bang:
+    var command = text.substr(1);
+    // Split text into words:
+    var arr = command.split(' ');
+    // Remove empty items:
+    arr = arr.filter(Boolean);
+    console.log("Saw command in " + to + ": " + arr);
+    // Loop through each rq:irc:command:filter:* command filter:
+    //   Loop through each word in command filter:
+    //     If word in filter matches word in command:
+    //       If filter words is in brackets:
+    //         If filter word is last word:
+    //           Push rest of command to arg array as single string
+    //           If filter.length > matchedFilter.length: matchedFilter = filter
+    //         Else:
+    //           Push command word to arg array
+    //       Else if filter word is last word:
+    //         If last word in command too:
+    //           If filter.length > matchedFilter.length: matchedFilter = filter
+    //     Else: 
+    //       break loop
   }
 });
 
