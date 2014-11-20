@@ -20,24 +20,38 @@ client.addListener('message', function (nick, to, text, message) {
     // Strip the bang:
     var command = text.substr(1);
     // Split text into words:
-    var arr = command.split(' ');
+    var commandArray = command.split(' ');
     // Remove empty items:
-    arr = arr.filter(Boolean);
-    console.log("Saw command in " + to + ": " + arr);
+    commandArray = commandArray.filter(Boolean);
+    console.log("Saw command in " + to + ": " + commandArray);
     // Loop through each rq:irc:command:filter:* command filter:
-    //   Loop through each word in command filter:
-    //     If word in filter matches word in command:
-    //       If filter words is in brackets:
-    //         If filter word is last word:
-    //           Push rest of command to arg array as single string
-    //           If filter.length > matchedFilter.length: matchedFilter = filter
-    //         Else:
-    //           Push command word to arg array
-    //       Else if filter word is last word:
-    //         If last word in command too:
-    //           If filter.length > matchedFilter.length: matchedFilter = filter
-    //     Else: 
-    //       break loop
+    r.keys("rq:irc:command:filter:*", function (err, storedCommandKeys) {
+      console.log(storedCommandKeys.length + " stored commands:");
+      storedCommandKeys.forEach(function (i) {
+        r.get(i, function(error, storedCommand) {
+          console.log(" Checking against --> " + storedCommand);
+          //   Loop through each word in command filter:
+          var i = 0;
+          JSON.parse(storedCommand).command.forEach(function (storedCommandWord) {
+            if (commandArray[i] == storedCommandWord) {
+              //       Else if filter word is last word:
+              //         If last word in command too:
+              //           If filter.length > matchedFilter.length: matchedFilter = filter
+            } else if (true){  //TODO: else if storedCommandWord is in [] brackets
+              //         If filter word is last word:
+              //           Push rest of command to arg array as single string
+              //           If filter.length > matchedFilter.length: matchedFilter = filter
+              //         Else:
+              //           Push command word to arg array
+            
+            } else {
+              //       break loop
+            }
+            ++i;
+          });
+        });
+      });
+    });
   }
 });
 
