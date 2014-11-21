@@ -27,25 +27,46 @@ client.addListener('message', function (nick, to, text, message) {
     // Loop through each rq:irc:command:filter:* command filter:
     r.keys("rq:irc:command:filter:*", function (err, storedCommandKeys) {
       console.log(storedCommandKeys.length + " stored commands:");
+      var matchedFilter = null;
+      var argumentArray = [];
       storedCommandKeys.forEach(function (i) {
         r.get(i, function(error, storedCommand) {
           console.log(" Checking against --> " + storedCommand);
-          //   Loop through each word in command filter:
+          // Loop through each word in command filter:
           var i = 0;
-          JSON.parse(storedCommand).command.forEach(function (storedCommandWord) {
-            if (commandArray[i] == storedCommandWord) {
-              //       Else if filter word is last word:
-              //         If last word in command too:
-              //           If filter.length > matchedFilter.length: matchedFilter = filter
-            } else if (true){  //TODO: else if storedCommandWord is in [] brackets
-              //         If filter word is last word:
-              //           Push rest of command to arg array as single string
-              //           If filter.length > matchedFilter.length: matchedFilter = filter
-              //         Else:
-              //           Push command word to arg array
-            
+          var parsedCommand = JSON.parse(storedCommand);
+          parsedCommand.command.forEach(function (storedCommandWord) {
+            if (/^\[.*\]$/.test(storedCommandWord)){  //if storedCommandWord is in [] brackets
+              console.log(" - Matching " + storedCommandWord + " command argument");
+              // If filter word is last word grab all of the remaining words:
+              if (i == parsedCommand.command.length - 1) {
+                console.log(' - Match success');
+                if (matchedFilter == null || parsedCommand.command.length > matchedFilter.length) {
+                  // TODO: Push rest of command to arg array as single string
+                  console.log(' - New longest match (' + parsedCommand.command.length + ')');
+                  matchedFilter = parsedCommand;
+                }
+              }
+              else { // If not the last word, just grab one word:
+                console.log('  - Storing argument "' + commandArray[i] + '"');
+                argumentArray.push(commandArray[i]);
+              }
+            } else if (commandArray[i] == storedCommandWord) {
+              // If storedCommandWord word is last word:
+              console.log(" - Matching " + storedCommandWord + " command word");
+              if (i == commandArray.length - 1 && i == parsedCommand.command.length - 1) {
+                console.log(' - Match success');
+                if (matchedFilter == null || parsedCommand.command.length > matchedFilter.length) {
+                  matchedFilter = parsedCommand;
+                  console.log(' - New longest matc (' + parsedCommand.command.length + ')');
+                }
+              } else if  (i == commandArray.length - 1 || i == parsedCommand.command.length - 1) {
+                console.log(' - Match failed because there were more words in the command.' + i);
+              }
             } else {
-              //       break loop
+              // Break loop
+              console.log(" - Failed to match " + storedCommandWord + " command word");
+              return;
             }
             ++i;
           });
