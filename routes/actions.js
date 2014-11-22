@@ -25,53 +25,65 @@ client.addListener('message', function (nick, to, text, message) {
     commandArray = commandArray.filter(Boolean);
     console.log("Saw command in " + to + ": " + commandArray);
     // Loop through each rq:irc:command:filter:* command filter:
-    r.keys("rq:irc:command:filter:*", function (err, storedCommandKeys) {
-      console.log(storedCommandKeys.length + " stored commands:");
+    r.keys("rq:irc:command:filter:*", function (err, commandFilterKeys) {
+      console.log(commandFilterKeys.length + " stored commands:");
       var matchedFilter = null;
-      var argumentArray = [];
-      storedCommandKeys.forEach(function (i) {
-        r.get(i, function(error, storedCommand) {
-          console.log(" Checking against --> " + storedCommand);
+      var arguments = {};
+      commandFilterKeys.forEach(function (i) {
+        r.get(i, function(error, commandFilter) {
+          console.log(" Checking against --> " + commandFilter);
           // Loop through each word in command filter:
           var i = 0;
-          var parsedCommand = JSON.parse(storedCommand);
-          parsedCommand.command.forEach(function (storedCommandWord) {
-            if (/^\[.*\]$/.test(storedCommandWord)){  //if storedCommandWord is in [] brackets
-              console.log(" - Matching " + storedCommandWord + " command argument");
+          var parsedCommand = JSON.parse(commandFilter);
+          parsedCommand.command.some(function (filterWord) {
+            if (/^\[.*\]$/.test(filterWord)){  //if filterWord is in [] brackets
+              console.log('  - Matched "' + filterWord + '"');
               // If filter word is last word grab all of the remaining words:
               if (i == parsedCommand.command.length - 1) {
-                console.log(' - Match success');
                 if (matchedFilter == null || parsedCommand.command.length > matchedFilter.length) {
-                  // TODO: Push rest of command to arg array as single string
-                  console.log(' - New longest match (' + parsedCommand.command.length + ')');
+                  // Push rest of command to arg array as single string:
+                  arguments[filterWord] = commandArray[i];
+                  for (++i; i<commandArray.length; ++i) {
+                    arguments[filterWord] += ' ' + commandArray[i];
+                  }
+                  console.log('   - Storing argument "' + arguments[filterWord] + '" -> ' + filterWord);
+                  console.log('  - Full command match success');
+                  console.log('  - New longest match (' + parsedCommand.command.length + ')');
                   matchedFilter = parsedCommand;
+                } else {
+                  console.log('  - Full command match success, but shorter than another match');
                 }
               }
               else { // If not the last word, just grab one word:
-                console.log('  - Storing argument "' + commandArray[i] + '"');
-                argumentArray.push(commandArray[i]);
+                console.log('   - Storing argument "' + commandArray[i] + '" -> ' + filterWord);
+                arguments[filterWord]=commandArray[i];
               }
-            } else if (commandArray[i] == storedCommandWord) {
-              // If storedCommandWord word is last word:
-              console.log(" - Matching " + storedCommandWord + " command word");
+            } else if (commandArray[i] == filterWord) {
+              // If filterWord word is last word:
+              console.log('  - Matched "' + filterWord + '"');
               if (i == commandArray.length - 1 && i == parsedCommand.command.length - 1) {
-                console.log(' - Match success');
+                console.log('  - Full command match success');
                 if (matchedFilter == null || parsedCommand.command.length > matchedFilter.length) {
+                  console.log('  - New longest match (' + parsedCommand.command.length + ')');
                   matchedFilter = parsedCommand;
-                  console.log(' - New longest matc (' + parsedCommand.command.length + ')');
+                } else {
+                  console.log('  - Full command match success, but shorter than another match');
                 }
               } else if  (i == commandArray.length - 1 || i == parsedCommand.command.length - 1) {
-                console.log(' - Match failed because there were more words in the command.' + i);
+                console.log('  - Match failed: Command length does not match filter.' + i);
               }
             } else {
-              // Break loop
-              console.log(" - Failed to match " + storedCommandWord + " command word");
-              return;
+              console.log('  - Failed to match "' + filterWord + '"');
+              return true; // Break loop
             }
             ++i;
+            return false; //Don't break the loop
           });
         });
       });
+      
+      // If matchedFilter != null, then it will contain the matched filter object at this point
+      // TODO: perform the action set by the filter
     });
   }
 });
