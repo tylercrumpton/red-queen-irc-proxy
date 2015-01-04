@@ -195,6 +195,9 @@ exports.registerCommand = function(req, res, next) {
   if (data.command == null) {
     return next(new restify.MissingParameterError("No command filter provided."));
   }
+  if (data.action == null) {
+    return next(new restify.MissingParameterError("No command action provided."));
+  }
 
   checkApiKey(KeyTypeEnum.COMMAND, apiKey, function(err, username) {  
     if (username == null && data.channel != "##rqtest") {
@@ -207,11 +210,11 @@ exports.registerCommand = function(req, res, next) {
       console.log("Key "+ apiKey + " belongs to " + username);
       var pattern = analyzePattern(data.command);
       if (pattern != null) {
-        console.log('Registering command: ' + JSON.stringify(pattern));
+        console.log('Registering command ' + JSON.stringify(pattern) + ' on channel ' + data.channel);
         r.incr('nextid', function(err, id) {
-          var commandObject = {"owner":username, "command":pattern};
+          var commandObject = {"owner":username, "command":pattern, "action":data.action, "channel":data.channel};
           r.set('rq:irc:command:filter:'+id, JSON.stringify(commandObject), function(){
-            var response = {"id":id, "owner":username, "pattern":pattern};
+            var response = {"id":id, "owner":username, "pattern":pattern, "action":data.action, "channel":data.channel};
             res.send(response);
           });
         });
