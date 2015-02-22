@@ -8,6 +8,7 @@
     "redis" : "*",
     "fs": "*",
     "node-static": "*",
-    "minimist": "*"
+    "minimist": "*",
+    "async": "*"
   }
 }

@@ -3,7 +3,8 @@ var config = module.parent.config
 var redis = require('redis');
 var restify = require('restify');
 var r = redis.createClient();
-
+var http = require('http');
+var async = require('async');
 var KeyTypeEnum = Object.freeze({MESSAGE:"msg",COMMAND:"cmd",ADMIN:"adm"});
 
 console.log("Connecting to server: " + config.connection.host);
@@ -11,6 +12,22 @@ console.log("Connecting to server: " + config.connection.host);
 var client = new irc.Client(config.connection.host, config.bot.nick, {
   channels: config.channels
 });
+
+var matchedFilter = null;
+function performAction(err) {
+  console.log("DONE");
+  // If matchedFilter != null, then it will contain the matched filter object at this point
+  if (matchedFilter != null) {
+    console.log("Filter matched, performing action.");
+    // Perform the action set by the filter
+    http.get("http://"+matchedFilter.action, function(res) {
+      console.log("Got response: " + res.statusCode);
+    }).on('error', function(e) {
+      console.log("Got error: " + e.message);
+    });
+  }
+
+}
 
 client.addListener('message', function (nick, to, text, message) {
   //console.log(nick + ' => ' + to + ': ' + text);
@@ -27,9 +44,9 @@ client.addListener('message', function (nick, to, text, message) {
     // Loop through each rq:irc:command:filter:* command filter:
     r.keys("rq:irc:command:filter:*", function (err, commandFilterKeys) {
       console.log(commandFilterKeys.length + " stored commands:");
-      var matchedFilter = null;
       var arguments = {};
-      commandFilterKeys.forEach(function (i) {
+      //commandFilterKeys.forEach(function (i) {
+      async.each(commandFilterKeys, function(i) {
         r.get(i, function(error, commandFilter) {
           console.log(" Checking against --> " + commandFilter);
           // Loop through each word in command filter:
@@ -70,7 +87,7 @@ client.addListener('message', function (nick, to, text, message) {
                   console.log('  - Full command match success, but shorter than another match');
                 }
               } else if  (i == commandArray.length - 1 || i == parsedCommand.command.length - 1) {
-                console.log('  - Match failed: Command length does not match filter.' + i);
+                console.log('  - Match failed: Command length does not match filter.');
               }
             } else {
               console.log('  - Failed to match "' + filterWord + '"');
@@ -80,10 +97,7 @@ client.addListener('message', function (nick, to, text, message) {
             return false; //Don't break the loop
           });
         });
-      });
-      
-      // If matchedFilter != null, then it will contain the matched filter object at this point
-      // TODO: perform the action set by the filter
+      }, performAction);
     });
   }
 });
