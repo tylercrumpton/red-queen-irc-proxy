@@ -32,7 +32,7 @@ function performAction(err) {
 client.addListener('message', function (nick, to, text, message) {
   //console.log(nick + ' => ' + to + ': ' + text);
   if (text == "!help" || text == "!rq") {
-    client.say(to, irc.colors.wrap('light_red','Just one byte, one scratch from these creatures is sufficient. And then, you become one of them. (For more info, check http://restirc.tylercrumpton.com/docs/)'));
+    client.say(to, irc.colors.wrap('dark_red','Just one byte, one scratch from these creatures is sufficient. And then, you become one of them. (For more info, check http://restirc.tylercrumpton.com/docs/)'));
   } else if (text.charAt(0) === '!') { 
     // Strip the bang:
     var command = text.substr(1);
@@ -152,11 +152,11 @@ exports.postMessage = function(req, res, next) {
       console.log("rq:irc:msg:key:"+ apiKey + " belongs to " + username);
       console.log('Posting message: ' + JSON.stringify(data));
       if (data.isaction) {
-        client.action(data.channel, irc.colors.wrap('light_red',data.message));
+        client.action(data.channel, irc.colors.wrap('dark_red',data.message));
         res.send("Success: Sent action " +  data.channel + ": '" + data.message + "'");
       }
       else {
-        client.say(data.channel, irc.colors.wrap('light_red',data.message));
+        client.say(data.channel, irc.colors.wrap('dark_red',data.message));
         res.send("Success: Sent message " +  data.channel + ": '" + data.message + "'");
       }
     }
